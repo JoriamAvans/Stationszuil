@@ -28,41 +28,44 @@ def startupCLI():
 
 
 def userInput():
+    try:
+        userName = input("Voer uw naam in. In het geval dat u dit veld leeg laat blijft u anoniem: ")
 
-    userName = input("Voer uw naam in. In het geval dat u dit veld leeg laat blijft u anoniem: ")
+        if userName is "":
+            userName = "Anoniem"
+        userMessage = input("Voer uw bericht in. Deze mag maximaal 140 karakters bevatten: ")
 
-    if userName is "":
-        userName = "Anoniem"
-    userMessage = input("Voer uw bericht in. Deze mag maximaal 140 karakters bevatten: ")
+        if len(userMessage) > 140:
+            print("Uw bericht was te lang, probeer het nog een keer.\n")
+            userMessage = input("Voer uw bericht in. Deze mag maximaal 140 karakters bevatten: ")
 
-    if len(userMessage) > 140:
-        print("Uw bericht was te lang, probeer het nog een keer.\n")
-        userInput() # This might need a fix later on. When a user tries a lot of times, the stack can fill up.
-
-    userInputList = [userMessage, userName]
-    return userInputList
-
+        userInputList = [userMessage, userName]
+        return userInputList
+    except Exception as e:
+        print(f"An error has occured: {e}, please try again.")
 
 def parseData(userList):
 
-    stationList = ["Amersfoort Centraal", "Utrecht Centraal", "'S-Hertogenbosch"]
-    randStation = stationList[random.randint(0, 2)]
+    try:
+        stationList = ["Amersfoort Centraal", "Utrecht Centraal", "'S-Hertogenbosch"]
+        randStation = stationList[random.randint(0, 2)]
 
-    currentDateTime = datetime.now()
-    msgTime = currentDateTime.strftime("%d/%m/%Y %H:%M:%S")
-    filename = currentDateTime.strftime("%d%m%Y_%H%M%S")
-    
-    # Write to csv file
-    with open(f'messages/{filename}.csv', 'w') as myFile:
+        currentDateTime = datetime.now()
+        msgTime = currentDateTime.strftime("%d/%m/%Y %H:%M:%S")
+        filename = currentDateTime.strftime("%d%m%Y_%H%M%S")
 
-        columns = ["Message", "DateTime", "Username", "Station"]
-        rows = [userList[0], msgTime, userList[1], randStation]  # Message, Date and time, Username, Random train station
+        # Write to csv file
+        with open(f'messages/{filename}.csv', 'w') as myFile:
 
-        writer = csv.writer(myFile)
-        writer.writerow(columns)
-        writer.writerow(rows)
+            columns = ["Message", "DateTime", "Username", "Station"]
+            rows = [userList[0], msgTime, userList[1], randStation]  # Message, Date and time, Username, Random train station
 
-        print("\n")
+            writer = csv.writer(myFile)
+            writer.writerow(columns)
+            writer.writerow(rows)
+            print("\n")
+    except Exception as e:
+        print(f"An error has occured: {e}, please try again.")
 
 
 startupCLI()
