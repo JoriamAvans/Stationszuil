@@ -18,14 +18,7 @@ Github:https://github.com/JoriamVS/Stationszuil
 import random
 import csv
 from datetime import datetime
-import mysql.connector
 random.seed()
-
-mydb = mysql.connector.connect(
-  host="localhost",
-  user="root",
-  password="admin"  # Very safe I know
-)
 
 
 def startupCLI():
@@ -75,10 +68,8 @@ def parseData(userList):
         print(f"An error has occured: {e}, please try again.")
 
 
-print(mydb)
+startupCLI()
 
-# startupCLI()
-
-# while True:
- #   message = userInput()
- #   parseData(message)
+while True:
+    message = userInput()
+    parseData(message)
