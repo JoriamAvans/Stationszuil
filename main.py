@@ -21,6 +21,7 @@ from datetime import datetime
 import mysql.connector
 import os
 import shutil
+import openweather
 random.seed()
 
 
@@ -192,4 +193,5 @@ if getMode == 1:
     userFunctions()
 elif getMode == 2:
     moderatorFunctions()
+
 
