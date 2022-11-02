@@ -99,7 +99,7 @@ def userInput():
 def parseData(userList):
 
     try:
-        stationList = ["Amersfoort Centraal", "Utrecht Centraal", "'S-Hertogenbosch"]
+        stationList = ["Amersfoort", "Utrecht", "'S-Hertogenbosch"]
         randStation = stationList[random.randint(0, 2)]
 
         currentDateTime = datetime.now()
@@ -195,3 +195,4 @@ elif getMode == 2:
     moderatorFunctions()
 
 
+a = openweather.getWeather('utrecht')
