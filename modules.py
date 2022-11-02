@@ -69,7 +69,7 @@ def moderatorFunctions():
         moderatePrompt = moderatePrompt.upper()
         if moderatePrompt == 'YES' or moderatePrompt == 'NO':
             if moderatePrompt == 'YES':
-                moderateMessage(modName, modMail)
+                cli_moderateMessage(modName, modMail)
                 continue
             elif moderatePrompt == 'NO':
                 break
@@ -99,7 +99,7 @@ def userInput():
 def parseData(userList):
 
     try:
-        stationList = ["Amersfoort", "Utrecht", "'S-Hertogenbosch"]
+        stationList = ["Amersfoort", "Utrecht", "Den Bosch"]
         randStation = stationList[random.randint(0, 2)]
 
         currentDateTime = datetime.now()
@@ -131,7 +131,7 @@ def getOldestFile():
     return oldest_file
 
 
-def moderateMessage(modName, modMail):
+def cli_moderateMessage(modName, modMail):
     to_moderate = getOldestFile()
     plainMessage = ''
 
@@ -157,6 +157,12 @@ def moderateMessage(modName, modMail):
     writeDatabase(to_moderate, getApproval, approveTime, approveDate, modName, modMail)
 
 
+def gui_moderateMessage(file, modName, modMail, approval):
+    print("Approval status: ", approval)
+    currentDateTime = datetime.now()
+    approveTime = currentDateTime.strftime("%H:%M")
+    approveDate = currentDateTime.strftime("%Y-%m/%d")
+    writeDatabase(file, approval, approveTime, approveDate, modName, modMail)
 
 
 def writeDatabase(file, approval, approveTime, approveDate, modName, modMail):
@@ -184,15 +190,39 @@ def writeDatabase(file, approval, approveTime, approveDate, modName, modMail):
     mydb.commit()
     moderated = file.split('/')
     shutil.move(file, f'mod_messages/{moderated[1]}')
+    mydb.close()
+    myCursor.close()
 
 
-startupCLI()
+def readDatabaseStation(service, city):
+    mydb = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="admin",  # Very safe I know
+        database="stationszuil"
+    )
 
-getMode = userOrMod()
-if getMode == 1:
-    userFunctions()
-elif getMode == 2:
-    moderatorFunctions()
+    myCursor = mydb.cursor(buffered=True)
+    sql = f'SELECT {service} FROM station_service WHERE station_city = %s'
+    myValues = (city, )
+    myCursor.execute(sql, myValues)
+
+    mydb.commit()
+    records = myCursor.fetchall()
+
+    mydb.close()
+    myCursor.close()
+
+    return records
 
 
-a = openweather.getWeather('utrecht')
+# startupCLI()
+#
+# getMode = userOrMod()
+# if getMode == 1:
+#     userFunctions()
+# elif getMode == 2:
+#     moderatorFunctions()
+#
+#
+# a = openweather.getWeather('utrecht')
