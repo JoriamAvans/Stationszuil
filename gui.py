@@ -7,9 +7,10 @@ from pathlib import Path
 
 # from tkinter import *
 # Explicit imports to satisfy Flake8
-from tkinter import Canvas, Entry, Button, PhotoImage, ttk
+from tkinter import Canvas, Entry, Button, PhotoImage, ttk, Frame
 import openweather
 import csv
+import re
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r'assets')
@@ -19,11 +20,15 @@ SCREENRESOLUTION_Y = 1080
 WINDOWPOSITION_X = (SCREENRESOLUTION_X / 2) - (1440 / 2)
 WINDOWPOSITION_Y = (SCREENRESOLUTION_Y / 2) - (924 / 1) + 425
 
-BTN_GEBRUIKER = 1
-BTN_ADMIN = 2
+BTN_ZUIL = 1
+BTN_MODERATOR = 2
 STATION_AMERSFOORT = 3
 STATION_DENBOSCH = 4
 STATION_UTRECHT = 5
+WINDOW_OPENING = 6
+WINDOW_ZUIL = 7
+WINDOW_MODERATOR = 8
+WINDOW_STATIONSHAL = 9
 
 
 def relative_to_assets(path: str) -> Path:
@@ -31,20 +36,24 @@ def relative_to_assets(path: str) -> Path:
     return testVar
 
 
-class Opening:
+class StdGraphics:
+    station_dict = {3: 'Amersfoort', 4: 'Den Bosch', 5: 'Utrecht'}
+
     def __init__(self, master):
-        super().__init__()  # Om de init van tk.Tk op te roepen
-
+        super().__init__()
         self.master = master
-        self.master.title("Stationszuil beginpagina")
-        # self.master.iconbitmap(relative_to_assets('image_1.ico'))
-        self.master.configure(bg="#E6E6E9")
-        self.master.geometry('%dx%d+%d+%d' % (1440, 924, WINDOWPOSITION_X, WINDOWPOSITION_Y))
 
-        def home_button():
-            self.master.destroy()
-            self.master = tk.Tk()
-            self.app = Opening(self.master)
+        return self
+
+    def home_button(self):
+        self.master.destroy()
+        self.master = tk.Tk()
+        self.app = Opening(self.master)
+
+    def draw(self):
+        self.master.overrideredirect(True)
+        self.master.geometry('%dx%d+%d+%d' % (1440, 924, WINDOWPOSITION_X, WINDOWPOSITION_Y))
+        title_bar = Frame(self.master, bg='#FFC917', relief='raised', bd=20)
 
         canvas = Canvas(
             self.master,
@@ -64,96 +73,6 @@ class Opening:
             185.0,
             fill="#FFC917",
             outline="")
-
-        canvas.place(x=0, y=0)
-        canvas.create_text(
-            419.0,
-            308.0,
-            anchor="nw",
-            text="Welke ervaring wilt u simuleren?",
-            fill="#000000",
-            font=("Public Sans", 40 * -1)
-        )
-
-        self.button_image_gebruiker = PhotoImage(
-            file=relative_to_assets("button_gebruiker.png"))
-        button_gebruiker = Button(
-            image=self.button_image_gebruiker,
-            borderwidth=0,
-            highlightthickness=0,
-            command=lambda: self.new_window(BTN_GEBRUIKER),
-            relief="flat"
-        )
-        button_gebruiker.place(
-            x=64.0,
-            y=544.0,
-            width=355.0,
-            height=106.0
-        )
-
-        self.button_image_zuil_amersfoort = PhotoImage(
-            file=relative_to_assets("button_zuil_amersfoort.png"))
-        button_zuil_amersfoort = Button(
-            image=self.button_image_zuil_amersfoort,
-            borderwidth=0,
-            highlightthickness=0,
-            command=lambda: self.new_window(STATION_AMERSFOORT),
-            relief="flat"
-        )
-        button_zuil_amersfoort.place(
-            x=467.0,
-            y=411.0,
-            width=505.0,
-            height=106.0
-        )
-
-        self.button_image_zuil_denbosch = PhotoImage(
-            file=relative_to_assets("button_zuil_denbosch.png"))
-        button_zuil_denbosch = Button(
-            image=self.button_image_zuil_denbosch,
-            borderwidth=0,
-            highlightthickness=0,
-            command=lambda: self.new_window(STATION_DENBOSCH),
-            relief="flat"
-        )
-        button_zuil_denbosch.place(
-            x=467.0,
-            y=544.0,
-            width=505.0,
-            height=106.0
-        )
-
-        self.button_image_zuil_utrecht = PhotoImage(
-            file=relative_to_assets("button_zuil_utrecht.png"))
-        button_zuil_utrecht = Button(
-            image=self.button_image_zuil_utrecht,
-            borderwidth=0,
-            highlightthickness=0,
-            command=lambda: self.new_window(STATION_UTRECHT),
-            relief="flat"
-        )
-        button_zuil_utrecht.place(
-            x=467.0,
-            y=677.0,
-            width=505.0,
-            height=106.0
-        )
-
-        self.button_image_admin = PhotoImage(
-            file=relative_to_assets("button_admin.png"))
-        button_admin = Button(
-            image=self.button_image_admin,
-            borderwidth=0,
-            highlightthickness=0,
-            command=lambda: self.new_window(BTN_ADMIN),
-            relief="flat"
-        )
-        button_admin.place(
-            x=1020.0,
-            y=544.0,
-            width=355.0,
-            height=106.0
-        )
 
         canvas.create_text(
             271.0,
@@ -171,7 +90,7 @@ class Opening:
             image=self.image_image_NS,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: home_button(),
+            command=lambda: StdGraphics.home_button(self),
             relief="flat"
         )
         button_image_NS.place(
@@ -181,75 +100,288 @@ class Opening:
             height=67.0
         )
 
+        self.image_image_close = PhotoImage(
+            file=relative_to_assets("button_close.png")
+        )
+        close_button = Button(
+            image=self.image_image_close,
+            command=lambda: self.master.destroy(),
+            borderwidth=0,
+            highlightthickness=0,
+            relief="flat"
+        )
+        close_button.place(
+            x=1390.0,
+            y=0.0,
+            width=50.0,
+            height=50.0
+        )
+
+
+        return canvas
+
+
+class TestGraphics:
+    def __init__(self, master):
+        super().__init__()
+        self.master = master
+        canvas = StdGraphics.draw(self, WINDOW_STATIONSHAL, STATION_DENBOSCH)
+
+        canvas.place(x=0, y=0)
+        canvas.create_text(
+            419.0,
+            308.0,
+            anchor="nw",
+            text="Welke ervaring wilt u simuleren?",
+            fill="#000000",
+            font=("Public Sans", 40 * -1)
+        )
+
+class Message:
+    imgs_toilet = []
+    imgs_bike = []
+    imgs_pr = []
+    imgs_lift = []
+    def __init__(self, master):
+        super.__init__()
+        self.master = master
+
+
+    def faciliteiten(self, msg_station, xCoord, yCoord, canvas):
+
+        test = 1
+        yCoord = yCoord + 8
+        xCoord = xCoord + 30
+        checkToilet = modules.readDatabaseStation('toilet', msg_station)
+        checkBike = modules.readDatabaseStation('ov_bike', msg_station)
+        checkPR = modules.readDatabaseStation('park_and_ride', msg_station)
+        checkLift = modules.readDatabaseStation('elevator', msg_station)
+
+        if checkToilet[0][0] != 0:
+            self.image_image_toilet = PhotoImage(
+                file=relative_to_assets("image_toilet_s.png"))
+            image_toilet = canvas.create_image(
+                xCoord,
+                yCoord,
+                image=self.image_image_toilet
+            )
+            Message.imgs_toilet.append(self.image_image_toilet)
+
+        if checkBike[0][0] != 0:
+            self.image_image_bike = PhotoImage(
+                file=relative_to_assets("image_bike_s.png"))
+            image_bike = canvas.create_image(
+                xCoord + 53,  # Image spacing is 53px, each object is 53px further away
+                yCoord,
+                image=self.image_image_bike
+            )
+            Message.imgs_bike.append(self.image_image_bike)
+
+        if checkPR[0][0] != 0:
+            self.image_image_pr = PhotoImage(
+                file=relative_to_assets("image_pr_s.png"))
+            image_pr = canvas.create_image(
+                xCoord + 106,
+                yCoord,
+                image=self.image_image_pr
+            )
+            Message.imgs_pr.append(self.image_image_pr)
+
+        if checkLift[0][0] != 0:
+            self.image_image_lift = PhotoImage(
+                file=relative_to_assets("image_lift_s.png"))
+            image_lift = canvas.create_image(
+                xCoord + 159,
+                yCoord,
+                image=self.image_image_lift
+            )
+            Message.imgs_lift.append(self.image_image_lift)
+
+    def placeMessage(self, yCoord, message, name, msg_station, canvas):
+        yCoord_name = yCoord + 32
+        canvas.create_text(
+            81.0,
+            yCoord,
+            anchor="nw",
+            text=f'\"{message}\"',
+            fill="#000000",
+            font=("Public Sans", 20 * -1)
+        )
+
+        msg_info = canvas.create_text(
+            81.0,
+            yCoord_name,  # The difference in Y is Y + 32
+            anchor="nw",
+            text=f"~ {name} over {msg_station}",
+            fill="#000000",
+            font=("Public Sans", 20 * -1)
+        )
+
+        bounds = canvas.bbox(msg_info)
+        width = bounds[2] - bounds[0]
+        Message.faciliteiten(self, msg_station, width + 81, yCoord_name, canvas)
+
+class Opening:
+    def __init__(self, master):
+        super().__init__()  # Om de init van tk.Tk op te roepen
+        self.master = master
+        canvas = StdGraphics.draw(self)
+        canvas.place(x=0, y=0)
+        canvas.create_text(
+            419.0,
+            308.0,
+            anchor="nw",
+            text="Welke ervaring wilt u simuleren?",
+            fill="#000000",
+            font=("Public Sans", 40 * -1)
+        )
+
+        self.button_image_zuil = PhotoImage(
+            file=relative_to_assets("button_zuil.png"))
+        button_zuil = Button(
+            image=self.button_image_zuil,
+            borderwidth=0,
+            highlightthickness=0,
+            command=lambda: self.new_window(BTN_ZUIL),
+            relief="flat"
+        )
+        button_zuil.place(
+            x=64.0,
+            y=544.0,
+            width=355.0,
+            height=106.0
+        )
+
+        self.button_image_station_amersfoort = PhotoImage(
+            file=relative_to_assets("button_station_amersfoort.png"))
+        button_station_amersfoort = Button(
+            image=self.button_image_station_amersfoort,
+            borderwidth=0,
+            highlightthickness=0,
+            command=lambda: self.new_window(STATION_AMERSFOORT),
+            relief="flat"
+        )
+        button_station_amersfoort.place(
+            x=467.0,
+            y=411.0,
+            width=505.0,
+            height=106.0
+        )
+
+        self.button_image_station_denbosch = PhotoImage(
+            file=relative_to_assets("button_station_denbosch.png"))
+        button_station_denbosch = Button(
+            image=self.button_image_station_denbosch,
+            borderwidth=0,
+            highlightthickness=0,
+            command=lambda: self.new_window(STATION_DENBOSCH),
+            relief="flat"
+        )
+        button_station_denbosch.place(
+            x=467.0,
+            y=544.0,
+            width=505.0,
+            height=106.0
+        )
+
+        self.button_image_station_utrecht = PhotoImage(
+            file=relative_to_assets("button_station_utrecht.png"))
+        button_station_utrecht = Button(
+            image=self.button_image_station_utrecht,
+            borderwidth=0,
+            highlightthickness=0,
+            command=lambda: self.new_window(STATION_UTRECHT),
+            relief="flat"
+        )
+        button_station_utrecht.place(
+            x=467.0,
+            y=677.0,
+            width=505.0,
+            height=106.0
+        )
+
+        self.button_image_moderator = PhotoImage(
+            file=relative_to_assets("button_moderator.png"))
+        button_moderator = Button(
+            image=self.button_image_moderator,
+            borderwidth=0,
+            highlightthickness=0,
+            command=lambda: self.new_window(BTN_MODERATOR),
+            relief="flat"
+        )
+        button_moderator.place(
+            x=1020.0,
+            y=544.0,
+            width=355.0,
+            height=106.0
+        )
+
+
     def new_window(self, button):
         self.master.destroy()
         self.master = tk.Tk()
 
-        if button == BTN_GEBRUIKER:
-            self.app = Gebruiker(self.master)
-        elif button == BTN_ADMIN:
-            self.app = Admin(self.master)
+        if button == BTN_ZUIL:
+            self.app = Zuil(self.master)
+        elif button == BTN_MODERATOR:
+            self.app = ModeratorData(self.master)
         elif button == STATION_AMERSFOORT:
-            self.app = Zuil(self.master, STATION_AMERSFOORT)
+            self.app = Stationshalscherm(self.master, STATION_AMERSFOORT)
         elif button == STATION_DENBOSCH:
-            self.app = Zuil(self.master, STATION_DENBOSCH)
+            self.app = Stationshalscherm(self.master, STATION_DENBOSCH)
         elif button == STATION_UTRECHT:
-            self.app = Zuil(self.master, STATION_UTRECHT)
+            self.app = Stationshalscherm(self.master, STATION_UTRECHT)
 
         self.master.mainloop()
 
 
-class Gebruiker:
+class Zuil:
     def __init__(self, master):
         super().__init__()  # Om de init van tk.Tk op te roepen
         self.master = master
-        self.master.title("Gebruikerspagina Stationszuil")
-        # self.master.iconbitmap(relative_to_assets('image_1.ico'))
-        self.master.configure(bg="#E6E6E9")
-        self.master.geometry('%dx%d+%d+%d' % (1440, 924, WINDOWPOSITION_X, WINDOWPOSITION_Y))
+        canvas = StdGraphics.draw(self)
 
-        def checkData():
+        self.station = modules.rand_station()
+
+        def checkData(canvas):
+            def refresh_window():
+                self.master.destroy()
+                self.master = tk.Tk()
+                self.app = Zuil(self.master)
+
             message = entry_message.get()
+            too_long = 'Your message was too long, a maximum of 140 characters is allowed. Please try again'
+            no_message = 'Please don\'t forget entering a message'
             naam = entry_naam.get()
+            if naam == '':
+                naam = 'Anoniem'
+
             if message != '':
                 if len(message) > 140:
                     entry_message.delete(0, tk.END)
-                    entry_message.insert(tk.END, 'Your message was too long, a maximum of 140 charcters is allowed. Please try again')
+                    # entry_message.insert(tk.END, too_long)
+                    canvas.create_text(
+                        81.0,
+                        740.0,
+                        anchor="nw",
+                        text=too_long,
+                        fill="#DB0029",
+                        font=("Public Sans", 30 * -1)
+                    )
 
                 else:
-                    if naam == '':
-                        naam = 'Anoniem'
                     userList = [message, naam]
-                    modules.parseData(userList)
+                    modules.parseData(userList, self.station)
+                    refresh_window()
             else:
-                entry_message.insert(tk.END, 'Please don\'t forget entering a message')
-            self.master.destroy()
-            self.master = tk.Tk()
-            self.app = Gebruiker(self.master)
-
-        def home_button():
-            self.master.destroy()
-            self.master = tk.Tk()
-            self.app = Opening(self.master)
-
-        canvas = Canvas(
-            self.master,
-            bg="#E6E6E9",
-            height=924,
-            width=1440,
-            bd=0,
-            highlightthickness=0,
-            relief="ridge"
-        )
-
-        canvas.place(x=0, y=0)
-        canvas.create_rectangle(
-            0.0,
-            0.0,
-            1440.0,
-            185.0,
-            fill="#FFC917",
-            outline="")
+                canvas.create_text(
+                    81.0,
+                    740.0,
+                    anchor="nw",
+                    text=no_message,
+                    fill="#DB0029",
+                    font=("Public Sans", 30 * -1)
+                )
 
         self.button_image_verzend = PhotoImage(
             file=relative_to_assets("button_verzend.png"))
@@ -257,7 +389,7 @@ class Gebruiker:
             image=self.button_image_verzend,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: checkData(),
+            command=lambda: checkData(canvas),
             relief="flat"
         )
         button_verzend.place(
@@ -283,31 +415,6 @@ class Gebruiker:
             text="Voer uw bericht in:",
             fill="#003082",
             font=("Public Sans", 40 * -1)
-        )
-
-        canvas.create_text(
-            271.0,
-            63.0,
-            anchor="nw",
-            text="Project: Stationszuil",
-            fill="#003082",
-            font=("Public Sans", 40 * -1)
-        )
-
-        self.image_image_NS = PhotoImage(
-            file=relative_to_assets("image_NS.png"))
-        button_image_NS = Button(
-            image=self.image_image_NS,
-            borderwidth=0,
-            highlightthickness=0,
-            command=lambda: home_button(),
-            relief="flat"
-        )
-        button_image_NS.place(
-            x=82.0,
-            y=58.0,
-            width=181.0,
-            height=67.0
         )
 
         self.entry_image_naam = PhotoImage(
@@ -353,106 +460,69 @@ class Gebruiker:
         )
 
 
-class Admin:
-    def __init__(self, master):
+class Moderator:
+    def __init__(self, master, name, mail):
         super().__init__()  # Om de init van tk.Tk op te roepen
         self.master = master
-        self.master.title("Adminpagina Stationszuil")
-        # self.master.iconbitmap(relative_to_assets('image_1.ico'))
-        self.master.configure(bg="#E6E6E9")
-        self.master.geometry('%dx%d+%d+%d' % (1440, 924, WINDOWPOSITION_X, WINDOWPOSITION_Y))
+        canvas = StdGraphics.draw(self)
+        self.name = name
+        self.mail = mail
 
-        def checkData(approval):
-            if entry_naam.get() != '' and entry_mail.get() != '':
-                modules.gui_moderateMessage(to_moderate, entry_naam.get(), entry_mail.get(), approval)
-                self.master.destroy()
-                self.master = tk.Tk()
-                self.app = Admin(self.master)
-
-        def home_button():
+        def refresh_window(approval):
+            modules.gui_moderateMessage(to_moderate, name, mail, approval)
             self.master.destroy()
             self.master = tk.Tk()
-            self.app = Opening(self.master)
+            self.app = Moderator(self.master, name, mail)
 
         to_moderate = modules.getOldestFile()
         plainMessage = ''
-        with open(to_moderate, 'r', newline='') as file:
-            csvRead = csv.DictReader(file)
-            for row in csvRead:
-                plainMessage = row['Message']
+        username = ''
+        if not to_moderate:
+            plainMessage = "Er zijn helaas geen berichten meer over, kijk later nog een keer."
+        else:
+            with open(to_moderate, 'r', newline='') as file:
+                csvRead = csv.DictReader(file)
+                for row in csvRead:
+                    plainMessage = row['Message']
+                    username = f"~ {row['Username']}"
 
-        canvas = Canvas(
-            self.master,
-            bg="#E6E6E9",
-            height=924,
-            width=1440,
-            bd=0,
-            highlightthickness=0,
-            relief="ridge"
-        )
+            self.button_image_afkeuren = PhotoImage(
+                file=relative_to_assets("button_afkeuren.png"))
+            button_afkeuren = Button(
+                image=self.button_image_afkeuren,
+                borderwidth=0,
+                highlightthickness=0,
+                command=lambda: refresh_window(False),
+                relief="flat"
+            )
+            button_afkeuren.place(
+                x=673.0,
+                y=784.0,
+                width=448.0,
+                height=99.0
+            )
 
-        canvas.place(x=0, y=0)
-        canvas.create_rectangle(
-            0.0,
-            0.0,
-            1440.0,
-            185.0,
-            fill="#FFC917",
-            outline="")
-
-        self.image_image_NS = PhotoImage(
-            file=relative_to_assets("image_NS.png"))
-        button_image_NS = Button(
-            image=self.image_image_NS,
-            borderwidth=0,
-            highlightthickness=0,
-            command=lambda: home_button(),
-            relief="flat"
-        )
-        button_image_NS.place(
-            x=82.0,
-            y=58.0,
-            width=181.0,
-            height=67.0
-        )
-
-        self.button_image_afkeuren = PhotoImage(
-            file=relative_to_assets("button_afkeuren.png"))
-        button_afkeuren = Button(
-            image=self.button_image_afkeuren,
-            borderwidth=0,
-            highlightthickness=0,
-            command=lambda: checkData(False),
-            relief="flat"
-        )
-        button_afkeuren.place(
-            x=673.0,
-            y=784.0,
-            width=448.0,
-            height=99.0
-        )
-
-        self.button_image_goedkeuren = PhotoImage(
-            file=relative_to_assets("button_goedkeuren.png"))
-        button_goedkeuren = Button(
-            image=self.button_image_goedkeuren,
-            borderwidth=0,
-            highlightthickness=0,
-            command=lambda: checkData(True),
-            relief="flat"
-        )
-        button_goedkeuren.place(
-            x=81.0,
-            y=784.0,
-            width=503.0,
-            height=99.0
-        )
+            self.button_image_goedkeuren = PhotoImage(
+                file=relative_to_assets("button_goedkeuren.png"))
+            button_goedkeuren = Button(
+                image=self.button_image_goedkeuren,
+                borderwidth=0,
+                highlightthickness=0,
+                command=lambda: refresh_window(True),
+                relief="flat"
+            )
+            button_goedkeuren.place(
+                x=81.0,
+                y=784.0,
+                width=503.0,
+                height=99.0
+            )
 
         canvas.create_text(
             81.0,
             207.0,
             anchor="nw",
-            text="Voer uw naam in:",
+            text="Uw naam:",
             fill="#003082",
             font=("Public Sans", 40 * -1)
         )
@@ -461,7 +531,7 @@ class Admin:
             694.0,
             207.0,
             anchor="nw",
-            text="Voer uw e-mail in:",
+            text="Uw e-mail:",
             fill="#003082",
             font=("Public Sans", 40 * -1)
         )
@@ -488,42 +558,47 @@ class Admin:
             file=relative_to_assets("entry_1.png"))
         entry_bg_naam = canvas.create_image(
             295.0,
-            320.0,
+            324.0,
             image=self.entry_image_naam
         )
-        entry_naam = Entry(
-            bd=0,
-            bg="#FFFFFF",
-            fg="#003082",
-            highlightthickness=0,
+
+        canvas.create_text(
+            90.0,
+            310.0,
+            anchor="nw",
+            text=name,
+            fill="#003082",
             font=("Public Sans", 25 * -1)
         )
-        entry_naam.place(
-            x=91.0,
-            y=300.0,
-            width=408.0,
-            height=40.0
-        )
+        # entry_naam = Entry(
+        #     bd=0,
+        #     bg="#FFFFFF",
+        #     fg="#003082",
+        #     highlightthickness=0,
+        #     font=("Public Sans", 25 * -1)
+        # )
+        # entry_bg_naam.place(
+        #     x=91.0,
+        #     y=300.0,
+        #     width=408.0,
+        #     height=40.0
+        # )
 
         self.entry_image_mail = PhotoImage(
             file=relative_to_assets("entry_1.png"))
         entry_bg_mail = canvas.create_image(
             907.0,
-            320.0,
+            324.0,
             image=self.entry_image_mail
         )
-        entry_mail = Entry(
-            bd=0,
-            bg="#FFFFFF",
-            fg="#003082",
-            highlightthickness=0,
+
+        canvas.create_text(
+            703.0,
+            310.0,
+            anchor="nw",
+            text=self.mail,
+            fill="#003082",
             font=("Public Sans", 25 * -1)
-        )
-        entry_mail.place(
-            x=703.0,
-            y=300.0,
-            width=408.0,
-            height=40.0
         )
 
         self.image_message = PhotoImage(
@@ -543,21 +618,253 @@ class Admin:
             font=("Public Sans", 25 * -1)
         )
 
+        canvas.create_text(
+            90.0,
+            510.0,
+            anchor="nw",
+            text=username,
+            fill="#003082",
+            font=("Public Sans", 25 * -1)
+        )
 
-class Zuil:
+class ModeratorData:
+    def __init__(self, master):
+        super().__init__()
+
+        self.master = master
+        canvas = StdGraphics.draw(self)
+
+        canvas.create_text(
+            563.0,
+            256.0,
+            anchor="nw",
+            text="Voer uw naam in:",
+            fill="#003082",
+            font=("Public Sans", 40 * -1)
+        )
+
+        canvas.create_text(
+            556.0,
+            424.0,
+            anchor="nw",
+            text="Voer uw e-mail in:",
+            fill="#003082",
+            font=("Public Sans", 40 * -1)
+        )
+
+        self.entry_image_naam = PhotoImage(
+            file=relative_to_assets("entry_1.png"))
+        entry_bg_naam = canvas.create_image(
+            720.0,
+            369.0,
+            image=self.entry_image_naam
+        )
+        entry_naam = Entry(
+            bd=0,
+            bg="#FFFFFF",
+            fg="#003082",
+            highlightthickness=0,
+            font=("Public Sans", 25 * -1)
+        )
+        entry_naam.place(
+            x=516.0,
+            y=347.0,
+            width=408.0,
+            height=40.0
+        )
+
+        self.entry_image_mail = PhotoImage(
+            file=relative_to_assets("entry_1.png"))
+        entry_bg_mail = canvas.create_image(
+            720.0,
+            542.0,
+            image=self.entry_image_mail,
+        )
+        entry_mail = Entry(
+            bd=0,
+            bg="#FFFFFF",
+            fg="#003082",
+            highlightthickness=0,
+            font=("Public Sans", 25 * -1)
+        )
+        entry_mail.place(
+            x=516.0,
+            y=520.0,
+            width=408.0,
+            height=40.0
+        )
+
+        self.button_image_verzend = PhotoImage(
+            file=relative_to_assets("button_verzend.png"))
+        button_verzend = Button(
+            image=self.button_image_verzend,
+            borderwidth=0,
+            highlightthickness=0,
+            command=lambda: self.check_data(self.master, entry_naam.get(), entry_mail.get(), canvas),
+            relief="flat"
+        )
+        button_verzend.place(
+            x=506.0,
+            y=751.0,
+            width=428.0,
+            height=99.0
+        )
+
+    def open_moderator(self, master, name, mail):
+        self.master.destroy()
+        self.master = tk.Tk()
+        self.app = Moderator(self.master, name, mail)
+
+    def check_data(self, master, name, mail, canvas):
+        def check_mail(mail):
+            regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+            if re.fullmatch(regex, mail):
+                return True
+            return False
+
+        invalid_mail = "You entered an invalid e-mail"
+        no_name = "Please don't forget to enter a name"
+
+        if name != '' and check_mail(mail):
+            self.open_moderator(self.master, name, mail)
+        else:
+            if name == '':
+                canvas.create_text(
+                    500.0,
+                    630.0,
+                    anchor="nw",
+                    text=no_name,
+                    fill="#DB0029",
+                    font=("Public Sans", 30 * -1)
+                )
+            if not check_mail(mail):
+                canvas.create_text(
+                    520.0,
+                    680.0,
+                    anchor="nw",
+                    text=invalid_mail,
+                    fill="#DB0029",
+                    font=("Public Sans", 30 * -1)
+                )
+
+
+class Stationshalscherm:
     def __init__(self, master, station):
         super().__init__()  # Om de init van tk.Tk op te roepen
 
-        self.master = master
-        self.master.title("Stationszuil")
-        # self.master.iconbitmap(relative_to_assets('image_1.ico'))
-        self.master.configure(bg="#E6E6E9")
-        self.master.geometry('%dx%d+%d+%d' % (1440, 924, WINDOWPOSITION_X, WINDOWPOSITION_Y))
+        def weerbericht():
+            weer_strStation = self.strStation
+            if weer_strStation == 'Den Bosch':
+                weer_strStation = '\'s-Hertogenbosch'
+            weatherData = openweather.getWeather(weer_strStation)
 
-        def home_button():
-            self.master.destroy()
-            self.master = tk.Tk()
-            self.app = Opening(self.master)
+            canvas.create_rectangle(
+                0.0,
+                674.0,
+                1440.0,
+                924.0,
+                fill="#D9D9D9",
+                outline="")
+
+            canvas.create_rectangle(
+                70.0,
+                690.0,
+                440.0,
+                900.0,
+                fill='#FFC917',
+                outline='')
+
+            self.image_image_weather = PhotoImage(
+                file=relative_to_assets("image_weather.png"))
+            image_weather = canvas.create_image(
+                245.0,
+                860.0,
+                image=self.image_image_weather
+            )
+
+            canvas.create_text(
+                81.0,
+                700.0,
+                anchor="nw",
+                text=f"Weerbericht {weer_strStation}",
+                fill="#003082",
+                font=("Public Sans", 32 * -1)
+            )
+
+            canvas.create_text(
+                450.0,
+                747.0,
+                anchor="nw",
+                text="Luchtvochtigheid: ",
+                fill="#003082",
+                font=("Public Sans", 32 * -1)
+            )
+
+            canvas.create_text(
+                450.0,
+                833.0,
+                anchor="nw",
+                text="Verwachte weersomstandigheden: ",
+                fill="#003082",
+                font=("Public Sans", 32 * -1)
+            )
+
+            canvas.create_text(
+                450.0,
+                790.0,
+                anchor="nw",
+                text="Luchtdruk: ",
+                fill="#003082",
+                font=("Public Sans", 32 * -1)
+            )
+
+            canvas.create_text(
+                1036.0,
+                790.0,
+                anchor="nw",
+                text=f"{weatherData[2]} hPa",
+                fill="#003082",
+                font=("Public Sans", 32 * -1)
+            )
+
+            canvas.create_text(
+                1036.0,
+                747.0,
+                anchor="nw",
+                text=f"{weatherData[1]}%",
+                fill="#003082",
+                font=("Public Sans", 32 * -1)
+            )
+
+            canvas.create_text(
+                1036.0,
+                833.0,
+                anchor="nw",
+                text=weatherData[3],
+                fill="#003082",
+                font=("Public Sans", 32 * -1)
+            )
+
+            canvas.create_text(
+                1036.0,
+                704.0,
+                anchor="nw",
+                text=f"{weatherData[0]}° Celcius",
+                fill="#003082",
+                font=("Public Sans", 32 * -1)
+            )
+
+            canvas.create_text(
+                450.0,
+                704.0,
+                anchor="nw",
+                text="Het is op het moment:",
+                fill="#003082",
+                font=("Public Sans", 32 * -1)
+            )
+
+        self.master = master
+        canvas = StdGraphics.draw(self)
 
         messageLocations = [281.0, 356.0, 431.0, 506.0, 581.0]
         if station == STATION_AMERSFOORT:
@@ -567,216 +874,30 @@ class Zuil:
         elif station == STATION_UTRECHT:
             self.strStation = 'Utrecht'
 
-        def placeMessage(yCoord, Message, Name):
-            canvas.create_text(
-                81.0,
-                yCoord,
-                anchor="nw",
-                text=Message,
-                fill="#000000",
-                font=("Public Sans", 20 * -1)
-            )
-
-            canvas.create_text(
-                81.0,
-                yCoord,  # The difference in Y is Y + 32
-                anchor="nw",
-                text=f"~ {Name}",
-                fill="#000000",
-                font=("Public Sans", 20 * -1)
-            )
-
-        def weerbericht():
-            weer_strStation = self.strStation
-            if weer_strStation == 'Den Bosch':
-                weer_strStation = '\'s-Hertogenbosch'
-            weatherData = openweather.getWeather(weer_strStation)
-            canvas.create_text(
-                303.0,
-                747.0,
-                anchor="nw",
-                text="Luchtvochtigheid: ",
-                fill="#003082",
-                font=("Public Sans", 32 * -1)
-            )
-
-            canvas.create_text(
-                300.0,
-                833.0,
-                anchor="nw",
-                text="Verwachte weersomstandigheden: ",
-                fill="#003082",
-                font=("Public Sans", 32 * -1)
-            )
-
-            canvas.create_text(
-                300.0,
-                790.0,
-                anchor="nw",
-                text="Luchtdruk: ",
-                fill="#003082",
-                font=("Public Sans", 32 * -1)
-            )
-
-            canvas.create_text(
-                886.0,
-                790.0,
-                anchor="nw",
-                text=f"{weatherData[2]} hPa",
-                fill="#003082",
-                font=("Public Sans", 32 * -1)
-            )
-
-            canvas.create_text(
-                886.0,
-                747.0,
-                anchor="nw",
-                text=f"{weatherData[1]}%",
-                fill="#003082",
-                font=("Public Sans", 32 * -1)
-            )
-
-            canvas.create_text(
-                886.0,
-                833.0,
-                anchor="nw",
-                text=weatherData[3],
-                fill="#003082",
-                font=("Public Sans", 32 * -1)
-            )
-
-            canvas.create_text(
-                886.0,
-                704.0,
-                anchor="nw",
-                text=f"{weatherData[0]}° Celcius",
-                fill="#003082",
-                font=("Public Sans", 32 * -1)
-            )
-
-            canvas.create_text(
-                303.0,
-                704.0,
-                anchor="nw",
-                text="Het is op het moment:",
-                fill="#003082",
-                font=("Public Sans", 32 * -1)
-            )
-
-        def faciliteiten():
-
-            test = 1
-            checkToilet = modules.readDatabaseStation('toilet', self.strStation)
-            checkBike = modules.readDatabaseStation('ov_bike', self.strStation)
-            checkPR = modules.readDatabaseStation('park_and_ride', self.strStation)
-            checkLift = modules.readDatabaseStation('elevator', self.strStation)
-
-            if len(checkToilet) != 0:
-                self.image_image_toilet = PhotoImage(
-                    file=relative_to_assets("image_toilet.png"))
-                image_toilet = canvas.create_image(
-                    957.0,
-                    92.0,
-                    image=self.image_image_toilet
-                )
-            if len(checkBike) != 0:
-                self.image_image_bike = PhotoImage(
-                    file=relative_to_assets("image_bike.png"))
-                image_bike = canvas.create_image(
-                    1079.0,
-                    92.0,
-                    image=self.image_image_bike
-                )
-
-            if len(checkPR) != 0:
-                self.image_image_pr = PhotoImage(
-                    file=relative_to_assets("image_pr.png"))
-                image_pr = canvas.create_image(
-                    1202.0,
-                    92.0,
-                    image=self.image_image_pr
-                )
-
-            if len(checkLift) != 0:
-                self.image_image_lift = PhotoImage(
-                    file=relative_to_assets("image_lift.png"))
-                image_lift = canvas.create_image(
-                    1316.0,
-                    92.0,
-                    image=self.image_image_lift
-                )
-
-        canvas = Canvas(
-            self.master,
-            bg="#E6E6E9",
-            height=924,
-            width=1440,
-            bd=0,
-            highlightthickness=0,
-            relief="ridge"
+        canvas.create_text(
+            1071.0,
+            63.0,
+            anchor="nw",
+            text=self.strStation,
+            fill="#003082",
+            font=("Public Sans", 40 * -1)
         )
 
-        canvas.place(x=0, y=0)
-        canvas.create_rectangle(
-            0.0,
-            674.0,
-            1440.0,
-            924.0,
-            fill="#D9D9D9",
-            outline="")
+        messageList = modules.getMessages()
+        for i in range(len(messageList)):
+            # Y coordinates, message, name, station
+            Message.placeMessage(self, messageLocations[i], messageList[i][1], messageList[i][4], messageList[i][5], canvas)
 
         canvas.create_text(
             81.0,
             216.0,
             anchor="nw",
-            text=f"Wat vindt de reiziger van Station {self.strStation}?",
+            text="Wat vindt de reiziger?",
             fill="#003082",
             font=("Public Sans", 40 * -1)
-        )
-
-        canvas.create_rectangle(
-            0.0,
-            0.0,
-            1440.0,
-            185.0,
-            fill="#FFC917",
-            outline="")
-
-        canvas.create_text(
-            271.0,
-            63.0,
-            anchor="nw",
-            text="Project: Stationszuil",
-            fill="#003082",
-            font=("Public Sans", 40 * -1)
-        )
-
-        self.image_image_NS = PhotoImage(
-            file=relative_to_assets("image_NS.png"))
-        button_image_NS = Button(
-            image=self.image_image_NS,
-            borderwidth=0,
-            highlightthickness=0,
-            command=lambda: home_button(),
-            relief="flat"
-        )
-        button_image_NS.place(
-            x=82.0,
-            y=58.0,
-            width=181.0,
-            height=67.0
-        )
-
-        self.image_image_weather = PhotoImage(
-            file=relative_to_assets("image_weather.png"))
-        image_weather = canvas.create_image(
-            145.0,
-            837.0,
-            image=self.image_image_weather
         )
 
         weerbericht()
-        faciliteiten()
 
 
 if __name__ == "__main__":

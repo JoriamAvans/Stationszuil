@@ -95,12 +95,16 @@ def userInput():
     except Exception as e:
         print(f"An error has occured: {e}, please try again.")
 
+def rand_station():
+    stationList = ["Amersfoort", "Utrecht", "Den Bosch"]
+    randStation = random.choice(stationList)
+    return randStation
 
-def parseData(userList):
+
+def parseData(userList, station):
 
     try:
-        stationList = ["Amersfoort", "Utrecht", "Den Bosch"]
-        randStation = stationList[random.randint(0, 2)]
+        randStation = station
 
         currentDateTime = datetime.now()
         msgDate = currentDateTime.strftime("%Y-%m-%d")
@@ -123,7 +127,8 @@ def parseData(userList):
 
 def getOldestFile():
     list_files = os.listdir('messages')
-
+    if len(list_files) == 0:
+        return False
     for i in range(len(list_files)):
         list_files[i] = f'messages/{list_files[i]}'
 
@@ -215,6 +220,27 @@ def readDatabaseStation(service, city):
 
     return records
 
+
+def getMessages():
+    mydb = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="admin",  # Very safe I know
+        database="stationszuil"
+    )
+
+    myCursor = mydb.cursor(buffered=True)
+    sql = f'select * from bericht where goedkeuring = %s order by datum desc, tijd desc limit 5;'
+    myValues = ('1',)
+    myCursor.execute(sql, myValues)
+
+    mydb.commit()
+    records = myCursor.fetchall()
+
+    mydb.close()
+    myCursor.close()
+
+    return records
 
 # startupCLI()
 #
