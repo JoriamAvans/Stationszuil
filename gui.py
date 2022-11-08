@@ -853,11 +853,12 @@ class Stationshalscherm:
         def weerbericht():
             weer_strStation = self.strStation
             # Because Den Bosch and 's-Hertogenbosch get different results from the API we force 's-Hertogenbosch
-            if weer_strStation == 'Den Bosch':
-                weer_strStation = '\'s-Hertogenbosch'
+            api_weer_strStation = weer_strStation
+            if api_weer_strStation == 'Den Bosch':
+                api_weer_strStation = '\'s-Hertogenbosch'
 
             # Get weather data
-            weatherData = openweather.getWeather(weer_strStation)
+            weatherData = openweather.getWeather(api_weer_strStation)
 
             # Spawn greyish rectangle where everything will be placed
             canvas.create_rectangle(
