@@ -1,5 +1,5 @@
-## User modules
-# This module contains all of the
+# User modules
+# This module contains all the functions used by the GUI and CLI
 import random
 import csv
 from datetime import datetime
