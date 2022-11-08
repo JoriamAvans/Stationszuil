@@ -171,11 +171,12 @@ def gui_moderateMessage(file, modName, modMail, approval):
 
 
 def writeDatabase(file, approval, approveTime, approveDate, modName, modMail):
+    db_login = database_login()
     mydb = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="admin",  # Very safe I know
-        database="stationszuil"
+        host=db_login[0],
+        user=db_login[1],
+        password=db_login[2],
+        database=db_login[3]
     )
 
     with open(file) as f:
@@ -200,11 +201,12 @@ def writeDatabase(file, approval, approveTime, approveDate, modName, modMail):
 
 
 def readDatabaseStation(service, city):
+    db_login = database_login()
     mydb = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="admin",  # Very safe I know
-        database="stationszuil"
+        host=db_login[0],
+        user=db_login[1],
+        password=db_login[2],
+        database=db_login[3]
     )
 
     myCursor = mydb.cursor(buffered=True)
@@ -242,13 +244,21 @@ def getMessages():
 
     return records
 
-# startupCLI()
-#
-# getMode = userOrMod()
-# if getMode == 1:
-#     userFunctions()
-# elif getMode == 2:
-#     moderatorFunctions()
-#
-#
-# a = openweather.getWeather('utrecht')
+def database_login():
+    with open('database_login.txt') as f:
+        contents = f.readlines()
+        strip_contents = []
+        for line in contents:
+            strip_contents.append(line.replace('\n', ''))
+    return strip_contents
+
+# To use the CLI instead of the gui remove the comment around the following block of code
+'''
+startupCLI()
+
+getMode = userOrMod()
+if getMode == 1:
+    userFunctions()
+elif getMode == 2:
+    moderatorFunctions()
+'''
